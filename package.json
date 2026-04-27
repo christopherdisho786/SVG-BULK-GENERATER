@@ -1,6 +1,6 @@
 {
   "name": "svg-bulk-generater",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-generate stock-ready SVG animation batches from a single topic.",
   "main": "server.js",
   "scripts": {
@@ -10,8 +10,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
   }
 }
