@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Bulk Generator</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Auto SVG Batch Generator (Stock Ready)</h1>
+
+      <form id="generator-form">
+        <label>
+          Topic
+          <input
+            id="topic"
+            type="text"
+            required
+            placeholder="Enter topic (e.g., business growth, digital marketing, finance icons)"
+          />
+        </label>
+
+        <label>
+          Number of SVGs
+          <input
+            id="count"
+            type="number"
+            min="1"
+            max="50"
+            required
+            placeholder="Enter number of SVG animations (e.g., 10)"
+          />
+        </label>
+
+        <label>
+          Extra Instructions (Optional)
+          <input
+            id="extra"
+            type="text"
+            placeholder="Optional style or direction (e.g., blue corporate, minimal, tech style)"
+          />
+        </label>
+
+        <div class="toggles">
+          <label>
+            Complexity
+            <select id="complexity">
+              <option value="simple">Simple</option>
+              <option value="medium">Medium</option>
+            </select>
+          </label>
+
+          <label class="inline">
+            <input id="preview-toggle" type="checkbox" checked />
+            Preview ON/OFF
+          </label>
+
+          <label class="inline">
+            <input id="zip-toggle" type="checkbox" checked />
+            Bulk ZIP after completion
+          </label>
+        </div>
+
+        <button id="start-btn" type="submit">Generate Batch</button>
+      </form>
+
+      <p id="progress">Idle.</p>
+      <section id="preview-grid" class="grid"></section>
+    </main>
+  </body>
+</html>
