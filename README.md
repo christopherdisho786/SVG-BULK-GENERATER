@@ -1,28 +1,39 @@
 # SVG Bulk Generater
 
-Web app for generating stock-marketplace-ready SVG animation batches from a single topic.
+High-throughput SVG animation generator for stock marketplaces using multi-topic, multi-instruction, multi-key parallel execution.
 
-## Setup
+## Run
 
 ```bash
-# Optional (no external dependencies required)
 npm install
-
-export OPENAI_API_KEY=your_key_here
 npm start
 ```
 
 Open <http://localhost:3000>.
 
-## Features
+## Upgraded workflow
 
-- Exactly 3 input boxes: Topic, Number of SVGs (1-50), Extra Instructions.
-- Fixed output requirements enforced in server prompt logic (16:9, 3840x2160, loopable, no overflow).
-- One API request per animation item.
-- Auto-download every SVG immediately after generation.
-- Strict filename format: `title.keyword1,keyword2,...keywordN.svg` with enforced title/keyword cleanup.
-- Optional switches:
-  - Simple / Medium complexity
-  - Preview on/off
-  - Bulk ZIP download after completion
-- Zero runtime dependencies (uses Node.js built-in HTTP/static server).
+- **Topics (CSV):** multiple topics at once.
+- **SVG Count Per Topic:** 1 to 50 generated per topic+instruction combination.
+- **Instructions (CSV):** multiple style directions.
+- **Gemini API Keys:** up to 50 keys (newline-separated).
+
+Generation matrix:
+
+- For each topic
+- For each instruction
+- Generate N SVGs
+
+All jobs run in parallel with key-shuffled round-robin assignment and retry on different keys (up to 2 retries).
+
+## Output behavior
+
+- Each successful SVG downloads immediately.
+- Optional ZIP is automatically downloaded after completion.
+- Filenames follow:
+  - `6-to-9-word-title.keyword1,...keyword25.svg`
+- Live status tracks:
+  - Running tasks
+  - Completed / Total
+  - Failed / Retried
+  - API keys in active use

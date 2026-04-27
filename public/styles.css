@@ -5,26 +5,27 @@
 
 body {
   margin: 0;
-  background: #0e1220;
-  color: #f6f8ff;
+  background: #0d1222;
+  color: #f5f7ff;
 }
 
 .container {
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
 }
 
 h1 {
-  margin-bottom: 18px;
+  margin: 0 0 16px;
 }
 
 form {
   display: grid;
   gap: 12px;
   padding: 16px;
-  background: #1a2238;
+  background: #18223d;
   border-radius: 12px;
+  border: 1px solid #2b365a;
 }
 
 label {
@@ -33,19 +34,29 @@ label {
 }
 
 input,
-select,
+textarea,
 button {
   font: inherit;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #344063;
+  background: #0f1730;
+  color: #f5f7ff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+small {
+  color: #9db0ea;
 }
 
 button {
+  border: 0;
   background: #3762ff;
-  color: #fff;
-  border: none;
   cursor: pointer;
+  font-weight: 700;
 }
 
 button:disabled {
@@ -53,49 +64,50 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.toggles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
+.status-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
 }
 
-.inline {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+.status-card {
+  background: #18223d;
+  border: 1px solid #2b365a;
+  border-radius: 10px;
+  padding: 10px;
 }
 
 #progress {
-  margin-top: 16px;
+  margin-top: 14px;
   font-weight: 700;
 }
 
 .grid {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
 }
 
 .card {
-  background: #1a2238;
-  border: 1px solid #2b3658;
+  background: #18223d;
+  border: 1px solid #2b365a;
   border-radius: 12px;
   padding: 10px;
 }
 
 .card .name {
   display: block;
-  font-size: 12px;
-  color: #8fa3e3;
   margin-top: 8px;
+  font-size: 12px;
+  color: #9db0ea;
   word-break: break-all;
 }
 
 .card svg {
   width: 100%;
   height: auto;
-  background: #fff;
   border-radius: 8px;
+  background: #fff;
 }
