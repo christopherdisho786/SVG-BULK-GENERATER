@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Parallel Batch Generator</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Multi-Key SVG Stock Generator</h1>
+
+      <form id="generator-form">
+        <label>
+          Topics (CSV)
+          <input id="topics" type="text" required placeholder="business growth, digital marketing" />
+        </label>
+
+        <label>
+          SVG Count Per Topic
+          <input id="count" type="number" min="1" max="50" required placeholder="10" />
+        </label>
+
+        <label>
+          Instructions (CSV)
+          <input id="instructions" type="text" required placeholder="blue corporate minimal, dark tech glowing" />
+        </label>
+
+        <label>
+          Gemini API Keys (MULTI-KEY INPUT)
+          <textarea id="keys" rows="8" required placeholder="key1&#10;key2&#10;key3"></textarea>
+          <small>One key per line. Max 50 keys.</small>
+        </label>
+
+        <button id="start-btn" type="submit">Run Parallel Generation</button>
+      </form>
+
+      <section class="status-grid">
+        <div class="status-card"><strong id="running">Running: 0 tasks</strong></div>
+        <div class="status-card"><strong id="completed">Completed: 0/0</strong></div>
+        <div class="status-card"><strong id="failed">Failed: 0</strong> · <strong id="retried">Retried: 0</strong></div>
+        <div class="status-card"><strong id="key-usage">Using 0/0 API keys</strong></div>
+      </section>
+
+      <p id="progress">Idle.</p>
+      <pre id="errors" class="errors"></pre>
+      <section id="preview-grid" class="grid"></section>
+    </main>
+  </body>
+</html>
