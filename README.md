@@ -25,6 +25,7 @@ Generation matrix:
 - Generate N SVGs
 
 All jobs run in parallel with key-shuffled round-robin assignment and retry on different keys (up to 2 retries).
+If Gemini returns `Please retry in ...s`, the key is temporarily cooled down and workers switch to other keys until cooldown expires.
 The server also tries multiple Gemini model candidates (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) to reduce model-not-found failures.
 
 ## Output behavior

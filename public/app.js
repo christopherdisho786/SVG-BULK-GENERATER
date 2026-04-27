@@ -179,6 +179,32 @@ function pickRetryKey(keys, usedSet) {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
+function parseRetryDelayMs(errorMessage) {
+  const text = String(errorMessage || '');
+  const match = text.match(/Please retry in\\s+([0-9]+(?:\\.[0-9]+)?)s/i);
+  if (!match) return null;
+  return Math.ceil(Number(match[1]) * 1000);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getBestAvailableKey(keys, usedSet, cooldownUntil) {
+  const now = Date.now();
+  const fresh = keys.filter((k) => (cooldownUntil.get(k) || 0) <= now && !usedSet.has(k));
+  if (fresh.length > 0) {
+    return fresh[Math.floor(Math.random() * fresh.length)];
+  }
+
+  const fallback = keys.filter((k) => (cooldownUntil.get(k) || 0) <= now);
+  if (fallback.length > 0) {
+    return fallback[Math.floor(Math.random() * fallback.length)];
+  }
+
+  return null;
+}
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -197,6 +223,7 @@ form.addEventListener('submit', async (event) => {
   const jobs = buildJobs(topics, instructions, countPerTopic, keys);
   const total = jobs.length;
   const keyStats = new Map(keys.map((k) => [k, { active: 0, completed: 0, failed: 0, retries: 0 }]));
+  const cooldownUntil = new Map(keys.map((k) => [k, 0]));
   const keyUsedEver = new Set();
   const recentErrors = [];
 
@@ -236,8 +263,15 @@ form.addEventListener('submit', async (event) => {
       let success = false;
 
       for (let attempt = 0; attempt < 3; attempt += 1) {
-        if (used.has(currentKey)) {
-          currentKey = pickRetryKey(keys, used);
+        if (used.has(currentKey) || (cooldownUntil.get(currentKey) || 0) > Date.now()) {
+          const available = getBestAvailableKey(keys, used, cooldownUntil);
+          if (available) {
+            currentKey = available;
+          } else {
+            const nextAt = Math.min(...keys.map((k) => cooldownUntil.get(k) || Date.now()));
+            await wait(Math.max(200, nextAt - Date.now()));
+            currentKey = getBestAvailableKey(keys, used, cooldownUntil) || pickRetryKey(keys, used);
+          }
         }
 
         const attemptKey = currentKey;
@@ -262,10 +296,16 @@ form.addEventListener('submit', async (event) => {
           keyStats.get(attemptKey).failed += 1;
           recentErrors.unshift(`${job.topic} / ${job.instruction}: ${error.message}`);
           if (recentErrors.length > 8) recentErrors.pop();
+
+          const retryDelayMs = parseRetryDelayMs(error.message);
+          if (retryDelayMs) {
+            cooldownUntil.set(attemptKey, Date.now() + retryDelayMs);
+          }
+
           if (attempt < 2) {
             retried += 1;
             keyStats.get(attemptKey).retries += 1;
-            currentKey = pickRetryKey(keys, used);
+            currentKey = getBestAvailableKey(keys, used, cooldownUntil) || pickRetryKey(keys, used);
           }
         } finally {
           running -= 1;

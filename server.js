@@ -40,6 +40,24 @@ function extractSvg(text) {
   return cleaned.slice(svgStart, svgEnd + 6).trim();
 }
 
+function extractSvgFromModelText(rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) {
+    throw new Error('Model returned empty output.');
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed.svg === 'string') {
+      return extractSvg(parsed.svg);
+    }
+  } catch {
+    // Not JSON; fall through to raw SVG extraction.
+  }
+
+  return extractSvg(text);
+}
+
 function parseGeminiError(rawText) {
   try {
     const parsed = JSON.parse(rawText);
@@ -56,7 +74,7 @@ Topic: ${topic}
 Style: ${instruction}
 Variation seed: ${jobSeed}
 Hard requirements:
-- Output ONLY SVG code.
+- Return strict JSON: {"svg":"<svg ... </svg>"}.
 - Use <svg viewBox="0 0 1920 1080" width="1920" height="1080">.
 - Composition fully inside frame.
 - No zoom in/out camera behavior.
@@ -78,7 +96,8 @@ Hard requirements:
         generationConfig: {
           temperature: 1,
           topP: 0.95,
-          maxOutputTokens: 4096
+          maxOutputTokens: 4096,
+          responseMimeType: 'application/json'
         }
       })
     });
@@ -94,7 +113,7 @@ Hard requirements:
 
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('\n') || '';
-    return extractSvg(text);
+    return extractSvgFromModelText(text);
   }
 
   throw new Error(lastError);
