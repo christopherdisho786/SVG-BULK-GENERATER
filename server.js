@@ -3,7 +3,10 @@ const fsp = require('fs/promises');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const MODEL_CANDIDATES = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash,gemini-1.5-flash')
+  .split(',')
+  .map((m) => m.trim())
+  .filter(Boolean);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 const MIME_TYPES = {
@@ -37,6 +40,16 @@ function extractSvg(text) {
   return cleaned.slice(svgStart, svgEnd + 6).trim();
 }
 
+function parseGeminiError(rawText) {
+  try {
+    const parsed = JSON.parse(rawText);
+    const message = parsed?.error?.message;
+    return message || rawText;
+  } catch {
+    return rawText;
+  }
+}
+
 async function callGemini({ apiKey, topic, instruction, jobSeed }) {
   const prompt = `Create a unique animated SVG for stock marketplaces.
 Topic: ${topic}
@@ -52,30 +65,39 @@ Hard requirements:
 - Pure vector SVG animation only (no raster images, no script tags).
 - Keep path count moderate and lightweight.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  let lastError = 'Unknown Gemini error.';
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 1,
-        topP: 0.95,
-        maxOutputTokens: 4096
+  for (const model of MODEL_CANDIDATES) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 1,
+          topP: 0.95,
+          maxOutputTokens: 4096
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = parseGeminiError(await response.text());
+      lastError = `Model ${model}: ${errText}`;
+      if (response.status !== 404) {
+        throw new Error(lastError);
       }
-    })
-  });
+      continue;
+    }
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API failure (${response.status}): ${errText}`);
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('\n') || '';
+    return extractSvg(text);
   }
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('\n') || '';
-
-  return extractSvg(text);
+  throw new Error(lastError);
 }
 
 async function handleGenerate(req, res) {

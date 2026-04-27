@@ -83,6 +83,17 @@ button:disabled {
   font-weight: 700;
 }
 
+.errors {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #5a3750;
+  background: #291524;
+  color: #ffd8e9;
+  white-space: pre-wrap;
+  min-height: 22px;
+}
+
 .grid {
   margin-top: 12px;
   display: grid;

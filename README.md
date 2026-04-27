@@ -25,6 +25,7 @@ Generation matrix:
 - Generate N SVGs
 
 All jobs run in parallel with key-shuffled round-robin assignment and retry on different keys (up to 2 retries).
+The server also tries multiple Gemini model candidates (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) to reduce model-not-found failures.
 
 ## Output behavior
 
@@ -36,4 +37,5 @@ All jobs run in parallel with key-shuffled round-robin assignment and retry on d
   - Running tasks
   - Completed / Total
   - Failed / Retried
-  - API keys in active use
+  - API keys active + used
+  - Recent API error messages for debugging

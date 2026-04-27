@@ -12,6 +12,7 @@ const completedEl = document.getElementById('completed');
 const failedEl = document.getElementById('failed');
 const retriedEl = document.getElementById('retried');
 const keyUsageEl = document.getElementById('key-usage');
+const errorsEl = document.getElementById('errors');
 
 const generatedFiles = [];
 
@@ -196,6 +197,8 @@ form.addEventListener('submit', async (event) => {
   const jobs = buildJobs(topics, instructions, countPerTopic, keys);
   const total = jobs.length;
   const keyStats = new Map(keys.map((k) => [k, { active: 0, completed: 0, failed: 0, retries: 0 }]));
+  const keyUsedEver = new Set();
+  const recentErrors = [];
 
   let completed = 0;
   let failed = 0;
@@ -204,16 +207,19 @@ form.addEventListener('submit', async (event) => {
 
   generatedFiles.length = 0;
   previewGrid.innerHTML = '';
+  errorsEl.textContent = '';
   startBtn.disabled = true;
 
   const updateStatus = () => {
     const activeKeys = [...keyStats.values()].filter((s) => s.active > 0).length;
+    const usedKeys = keyUsedEver.size;
     runningEl.textContent = `Running: ${running} tasks`;
     completedEl.textContent = `Completed: ${completed}/${total}`;
     failedEl.textContent = `Failed: ${failed}`;
     retriedEl.textContent = `Retried: ${retried}`;
-    keyUsageEl.textContent = `Using ${activeKeys}/${keys.length} API keys`;
+    keyUsageEl.textContent = `Active ${activeKeys}/${keys.length} · Used ${usedKeys}/${keys.length} API keys`;
     progress.textContent = `Parallel jobs active. ${completed + failed}/${total} processed.`;
+    errorsEl.textContent = recentErrors.length === 0 ? '' : `Recent errors:\n- ${recentErrors.join('\n- ')}`;
   };
 
   let cursor = 0;
@@ -236,6 +242,7 @@ form.addEventListener('submit', async (event) => {
 
         const attemptKey = currentKey;
         used.add(attemptKey);
+        keyUsedEver.add(attemptKey);
         running += 1;
         keyStats.get(attemptKey).active += 1;
         updateStatus();
@@ -253,6 +260,8 @@ form.addEventListener('submit', async (event) => {
           break;
         } catch (error) {
           keyStats.get(attemptKey).failed += 1;
+          recentErrors.unshift(`${job.topic} / ${job.instruction}: ${error.message}`);
+          if (recentErrors.length > 8) recentErrors.pop();
           if (attempt < 2) {
             retried += 1;
             keyStats.get(attemptKey).retries += 1;
@@ -281,6 +290,9 @@ form.addEventListener('submit', async (event) => {
     await Promise.all(Array.from({ length: workerCount }, (_, i) => worker(i + 1)));
 
     progress.textContent = `Done. Completed ${completed}, failed ${failed}, total ${total}.`;
+    if (failed === total) {
+      errorsEl.textContent = `${errorsEl.textContent}\n\nTip: if every task failed, check key validity, Gemini API enablement, and project quota/billing.`;
+    }
     await downloadZip();
   } catch (error) {
     progress.textContent = `Stopped: ${error.message}`;
